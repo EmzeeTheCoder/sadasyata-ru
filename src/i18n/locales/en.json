@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "home": "Home",
+    "catalog": "Catalog",
+    "ps5": "PS5",
+    "xbox": "Xbox",
+    "ai": "AI Tools",
+    "subscriptions": "Subscriptions",
+    "support": "Support"
+  },
+  "hero": {
+    "badge": "Instant Delivery",
+    "title": "Digital Products",
+    "titleHighlight": "for Russia & CIS",
+    "subtitle": "Licensed keys, subscriptions and AI tools at the best prices. Delivered in seconds.",
+    "cta": "Browse Catalog",
+    "ctaSecondary": "Deals & Discounts",
+    "stats": {
+      "sales": "sales",
+      "delivery": "Instant",
+      "deliveryLabel": "delivery",
+      "support": "24/7",
+      "supportLabel": "support"
+    }
+  },
+  "trust": {
+    "instant": "Instant Delivery",
+    "instantDesc": "Your key arrives right after payment",
+    "verified": "Verified Seller",
+    "verifiedDesc": "Official Digiseller partner",
+    "support": "24/7 Support",
+    "supportDesc": "Always available on Telegram",
+    "guarantee": "Money-back Guarantee",
+    "guaranteeDesc": "We resolve every issue"
+  },
+  "categories": {
+    "title": "Categories",
+    "subtitle": "Find what you need",
+    "ps5": "PS5 Games",
+    "xbox": "Xbox",
+    "ai": "AI Tools",
+    "subscriptions": "Subscriptions"
+  },
+  "products": {
+    "featured": "Featured Products",
+    "featuredSubtitle": "Most popular items",
+    "all": "All Products",
+    "buy": "Buy",
+    "buyNow": "Buy Now",
+    "sold": "sold",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "reviews": "reviews",
+    "noProducts": "No products found",
+    "loading": "Loading..."
+  },
+  "reviews": {
+    "title": "Customer Reviews",
+    "subtitle": "Real reviews from Digiseller",
+    "verified": "Verified Purchase"
+  },
+  "footer": {
+    "desc": "Trusted digital products store for Russia and CIS",
+    "catalog": "Catalog",
+    "support": "Support",
+    "contact": "Message on Telegram",
+    "rights": "All rights reserved",
+    "powered": "Payments via Digiseller"
+  },
+  "currency": {
+    "rub": "₽ RUB",
+    "usd": "$ USD"
+  },
+  "product": {
+    "description": "Description",
+    "howToBuy": "How to Buy",
+    "step1": "Click «Buy Now»",
+    "step2": "Pay with your preferred method",
+    "step3": "Receive your key instantly",
+    "related": "Related Products",
+    "share": "Share"
+  }
+}

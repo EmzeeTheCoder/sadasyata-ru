@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "home": "Главная",
+    "catalog": "Каталог",
+    "ps5": "PS5",
+    "xbox": "Xbox",
+    "ai": "AI Инструменты",
+    "subscriptions": "Подписки",
+    "support": "Поддержка"
+  },
+  "hero": {
+    "badge": "Мгновенная доставка",
+    "title": "Цифровые продукты",
+    "titleHighlight": "для России и СНГ",
+    "subtitle": "Лицензионные ключи, подписки и AI-инструменты по лучшим ценам. Доставка за секунды.",
+    "cta": "Смотреть каталог",
+    "ctaSecondary": "Акции и скидки",
+    "stats": {
+      "sales": "продаж",
+      "delivery": "Мгновенно",
+      "deliveryLabel": "доставка",
+      "support": "24/7",
+      "supportLabel": "поддержка"
+    }
+  },
+  "trust": {
+    "instant": "Мгновенная доставка",
+    "instantDesc": "Ключ приходит сразу после оплаты",
+    "verified": "Проверенный продавец",
+    "verifiedDesc": "Официальный партнёр Digiseller",
+    "support": "Поддержка 24/7",
+    "supportDesc": "Всегда на связи в Telegram",
+    "guarantee": "Гарантия возврата",
+    "guaranteeDesc": "Решим любую проблему"
+  },
+  "categories": {
+    "title": "Категории",
+    "subtitle": "Выберите нужное",
+    "ps5": "PS5 Игры",
+    "xbox": "Xbox",
+    "ai": "AI Инструменты",
+    "subscriptions": "Подписки"
+  },
+  "products": {
+    "featured": "Популярные товары",
+    "featuredSubtitle": "Самые востребованные позиции",
+    "all": "Все товары",
+    "buy": "Купить",
+    "buyNow": "Купить сейчас",
+    "sold": "продано",
+    "inStock": "В наличии",
+    "outOfStock": "Нет в наличии",
+    "reviews": "отзывов",
+    "noProducts": "Товары не найдены",
+    "loading": "Загрузка..."
+  },
+  "reviews": {
+    "title": "Отзывы покупателей",
+    "subtitle": "Реальные отзывы с Digiseller",
+    "verified": "Проверенная покупка"
+  },
+  "footer": {
+    "desc": "Надёжный магазин цифровых продуктов для России и СНГ",
+    "catalog": "Каталог",
+    "support": "Поддержка",
+    "contact": "Написать в Telegram",
+    "rights": "Все права защищены",
+    "powered": "Платежи через Digiseller"
+  },
+  "currency": {
+    "rub": "₽ RUB",
+    "usd": "$ USD"
+  },
+  "product": {
+    "description": "Описание",
+    "howToBuy": "Как купить",
+    "step1": "Нажмите «Купить сейчас»",
+    "step2": "Оплатите удобным способом",
+    "step3": "Получите ключ мгновенно",
+    "related": "Похожие товары",
+    "share": "Поделиться"
+  }
+}
