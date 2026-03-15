@@ -1,127 +1,121 @@
 'use client';
 
-// Renders Digiseller product descriptions with custom tag support:
-// <delivery> → highlighted orange box (most important info)
-// <attention> → yellow warning box
-// All other HTML rendered normally
+// Renders Digiseller product descriptions
+// Handles both Russian and English tag variants:
+// <delivery> / <доставка>  → orange highlighted box
+// <attention> / <внимание> → yellow warning box  
+// <br> tags and plain HTML rendered normally
 
 interface Props {
   html: string;
 }
 
-function parseDescription(html: string): React.ReactNode[] {
-  const nodes: React.ReactNode[] = [];
-  let remaining = html;
-  let key = 0;
+type Block =
+  | { type: 'html'; content: string }
+  | { type: 'delivery'; content: string }
+  | { type: 'attention'; content: string };
 
-  while (remaining.length > 0) {
-    // Check for <delivery> tag
-    const deliveryStart = remaining.toLowerCase().indexOf('<delivery>');
-    const attentionStart = remaining.toLowerCase().indexOf('<attention>');
+// All tag variants Digiseller uses (case-insensitive)
+const DELIVERY_OPEN  = /<delivery>|<доставка>/gi;
+const DELIVERY_CLOSE = /<\/delivery>|<\/доставка>/gi;
+const ATTENTION_OPEN  = /<attention>|<внимание>/gi;
+const ATTENTION_CLOSE = /<\/attention>|<\/внимание>/gi;
 
-    // Find the nearest special tag
-    let nextTag: 'delivery' | 'attention' | null = null;
-    let nextPos = Infinity;
+function parseBlocks(html: string): Block[] {
+  const blocks: Block[] = [];
 
-    if (deliveryStart !== -1 && deliveryStart < nextPos) {
-      nextTag = 'delivery';
-      nextPos = deliveryStart;
+  // Normalize all tag variants to a single marker
+  let normalized = html
+    .replace(/<доставка>/gi, '<delivery>')
+    .replace(/<\/доставка>/gi, '</delivery>')
+    .replace(/<внимание>/gi, '<attention>')
+    .replace(/<\/внимание>/gi, '</attention>');
+
+  // Split on special tags using a regex that captures them
+  const parts = normalized.split(/(<\/?(?:delivery|attention)>)/gi);
+
+  let currentType: 'html' | 'delivery' | 'attention' = 'html';
+  let buffer = '';
+
+  for (const part of parts) {
+    if (!part) continue;
+    const lower = part.toLowerCase();
+
+    if (lower === '<delivery>') {
+      if (buffer.trim()) blocks.push({ type: currentType, content: buffer });
+      buffer = '';
+      currentType = 'delivery';
+    } else if (lower === '</delivery>') {
+      if (buffer.trim()) blocks.push({ type: 'delivery', content: buffer });
+      buffer = '';
+      currentType = 'html';
+    } else if (lower === '<attention>') {
+      if (buffer.trim()) blocks.push({ type: currentType, content: buffer });
+      buffer = '';
+      currentType = 'attention';
+    } else if (lower === '</attention>') {
+      if (buffer.trim()) blocks.push({ type: 'attention', content: buffer });
+      buffer = '';
+      currentType = 'html';
+    } else {
+      buffer += part;
     }
-    if (attentionStart !== -1 && attentionStart < nextPos) {
-      nextTag = 'attention';
-      nextPos = attentionStart;
-    }
-
-    if (nextTag === null) {
-      // No more special tags — render remaining as HTML
-      if (remaining.trim()) {
-        nodes.push(
-          <div
-            key={key++}
-            className="text-brand-gray leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanHtml(remaining) }}
-          />
-        );
-      }
-      break;
-    }
-
-    // Render text before the special tag
-    if (nextPos > 0) {
-      const before = remaining.slice(0, nextPos);
-      if (before.trim()) {
-        nodes.push(
-          <div
-            key={key++}
-            className="text-brand-gray leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanHtml(before) }}
-          />
-        );
-      }
-    }
-
-    // Find closing tag
-    const closeTag = `</${nextTag}>`;
-    const closePos = remaining.toLowerCase().indexOf(closeTag, nextPos);
-
-    if (closePos === -1) {
-      // No closing tag found — treat rest as plain content
-      remaining = remaining.slice(nextPos + nextTag.length + 2);
-      continue;
-    }
-
-    const openTagLength = nextTag.length + 2; // e.g. <delivery> = 10 chars
-    const innerContent = remaining.slice(nextPos + openTagLength, closePos);
-
-    if (nextTag === 'delivery') {
-      nodes.push(
-        <div
-          key={key++}
-          className="my-4 p-4 rounded-xl border border-brand-orange/40 bg-brand-orange/10 relative overflow-hidden"
-        >
-          {/* Glow accent */}
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-orange rounded-l-xl" />
-          <div
-            className="pl-3 text-sm text-white leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanHtml(innerContent) }}
-          />
-        </div>
-      );
-    } else if (nextTag === 'attention') {
-      nodes.push(
-        <div
-          key={key++}
-          className="my-4 p-4 rounded-xl border border-yellow-400/30 bg-yellow-400/8 relative overflow-hidden"
-        >
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-yellow-400 rounded-l-xl" />
-          <div
-            className="pl-3 text-sm text-yellow-100/90 leading-relaxed"
-            dangerouslySetInnerHTML={{ __html: cleanHtml(innerContent) }}
-          />
-        </div>
-      );
-    }
-
-    remaining = remaining.slice(closePos + closeTag.length);
   }
 
-  return nodes;
+  if (buffer.trim()) blocks.push({ type: currentType, content: buffer });
+  return blocks;
 }
 
-// Clean up common Digiseller HTML artifacts
-function cleanHtml(html: string): string {
+function cleanContent(html: string): string {
   return html
-    .replace(/<br\s*\/?>/gi, '<br/>')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^(<br\s*\/?>|\s)+/gi, '')  // strip leading breaks
+    .replace(/(<br\s*\/?>|\s)+$/gi, '')  // strip trailing breaks
     .trim();
 }
 
 export default function ProductDescription({ html }: Props) {
   if (!html) return null;
-  const nodes = parseDescription(html);
+  const blocks = parseBlocks(html);
+
   return (
-    <div className="space-y-2 text-sm">
-      {nodes}
+    <div className="space-y-3 text-sm">
+      {blocks.map((block, i) => {
+        const content = cleanContent(block.content);
+        if (!content) return null;
+
+        if (block.type === 'delivery') {
+          return (
+            <div key={i} className="relative rounded-xl border border-brand-orange/40 bg-brand-orange/8 overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-brand-orange" />
+              <div
+                className="px-4 py-3 pl-5 text-white leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            </div>
+          );
+        }
+
+        if (block.type === 'attention') {
+          return (
+            <div key={i} className="relative rounded-xl border border-yellow-400/30 bg-yellow-400/5 overflow-hidden">
+              <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-yellow-400" />
+              <div
+                className="px-4 py-3 pl-5 text-yellow-100/90 leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            </div>
+          );
+        }
+
+        // Plain HTML block
+        return (
+          <div
+            key={i}
+            className="text-brand-gray leading-relaxed"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
+        );
+      })}
     </div>
   );
 }
