@@ -7,8 +7,9 @@ import Footer from '@/components/layout/Footer';
 import ProductCard from '@/components/product/ProductCard';
 import BuyButton from '@/components/product/BuyButton';
 import ProductDescription from '@/components/product/ProductDescription';
+import ReviewDebug from '@/components/product/ReviewDebug';
 import { getProductDetail, getProductReviews, getSellerProducts, getUsdRate } from '@/lib/digiseller';
-import { Star, CheckCircle, Zap, Shield } from 'lucide-react';
+import { Star, CheckCircle, Zap, Shield, ThumbsUp, ThumbsDown } from 'lucide-react';
 
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
@@ -20,10 +21,9 @@ export async function generateMetadata(
   if (!product) return {};
   return {
     title: product.name,
-    description: `Купить ${product.name} с мгновенной доставкой. Цена: ${product.price} ₽. Проверенный продавец Sadasyata.`,
+    description: `Купить ${product.name} с мгновенной доставкой. Цена: ${Math.round(product.price)} ₽.`,
     openGraph: {
       title: product.name,
-      description: `Купить ${product.name} — мгновенная доставка`,
       images: product.image_url ? [{ url: product.image_url }] : [],
     },
   };
@@ -48,6 +48,7 @@ export default async function ProductPage(
   const relatedProducts = related.filter((p) => p.id !== product.id).slice(0, 4);
   const priceRub = Math.round(product.price_rub || product.price).toLocaleString('ru-RU');
   const priceUsd = (product.price_usd || product.price / usdRate).toFixed(2);
+  const positiveReviews = reviews.filter((r) => r.positive).length;
 
   return (
     <>
@@ -56,7 +57,7 @@ export default async function ProductPage(
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-xs text-brand-gray mb-8">
+          <div className="flex items-center gap-2 text-xs text-brand-gray mb-8 flex-wrap">
             <Link href="/" className="hover:text-white transition-colors">Главная</Link>
             <span>/</span>
             <Link href="/catalog" className="hover:text-white transition-colors">Каталог</Link>
@@ -83,32 +84,56 @@ export default async function ProductPage(
                 {product.name}
               </h1>
 
-              <div className="flex flex-wrap gap-2 mb-6">
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2 mb-5">
                 <span className="flex items-center gap-1.5 px-3 py-1.5 bg-green-400/10 border border-green-400/20 rounded-full text-xs text-green-400">
                   <CheckCircle size={11} /> В наличии
                 </span>
                 <span className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-orange/10 border border-brand-orange/20 rounded-full text-xs text-brand-orange">
                   <Zap size={11} fill="currentColor" /> Мгновенная доставка
                 </span>
+                {product.cnt_sell_total && product.cnt_sell_total > 0 && (
+                  <span className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-xs text-brand-gray">
+                    {product.cnt_sell_total.toLocaleString('ru-RU')} продано
+                  </span>
+                )}
               </div>
 
               {/* Price */}
-              <div className="p-5 bg-brand-dark-2 border border-white/5 rounded-2xl mb-6">
+              <div className="p-5 bg-brand-dark-2 border border-white/5 rounded-2xl mb-5">
                 <div className="flex items-baseline gap-3">
                   <span className="font-display text-4xl text-brand-orange">{priceRub} ₽</span>
                   <span className="text-lg text-brand-gray">${priceUsd}</span>
                 </div>
               </div>
 
+              {/* Variants — shown if product has options */}
+              {product.variants && product.variants.length > 0 && (
+                <div className="p-5 bg-brand-dark-2 border border-white/5 rounded-2xl mb-5">
+                  <p className="text-xs text-brand-gray mb-3 font-semibold uppercase tracking-wider">Выберите вариант</p>
+                  <div className="space-y-2">
+                    {product.variants.map((v) => (
+                      <div key={v.id} className="flex items-center justify-between p-3 rounded-xl border border-white/10 hover:border-brand-orange/30 transition-colors cursor-pointer">
+                        <span className="text-sm text-white">{v.name}</span>
+                        {v.price_modifier > 0 && (
+                          <span className="text-xs text-brand-orange">+${v.price_modifier}</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-brand-gray mt-3">Выберите план на странице оплаты Digiseller</p>
+                </div>
+              )}
+
               <BuyButton productId={product.id} />
 
               {/* How to buy */}
-              <div className="mt-8 p-5 bg-brand-dark-2 border border-white/5 rounded-2xl">
+              <div className="mt-5 p-5 bg-brand-dark-2 border border-white/5 rounded-2xl">
                 <h3 className="text-sm font-semibold text-white mb-4">Как купить</h3>
                 <div className="space-y-3">
                   {[
                     'Нажмите «Купить сейчас»',
-                    'Оплатите удобным способом на Digiseller',
+                    'Выберите вариант и оплатите на Digiseller',
                     'Получите ключ мгновенно после оплаты',
                   ].map((step, i) => (
                     <div key={i} className="flex items-start gap-3">
@@ -123,7 +148,7 @@ export default async function ProductPage(
             </div>
           </div>
 
-          {/* Full Description with delivery/attention tag rendering */}
+          {/* Full Description */}
           {product.description && (
             <div className="mb-20">
               <h2 className="font-display text-2xl text-white mb-6">Описание</h2>
@@ -134,34 +159,62 @@ export default async function ProductPage(
           )}
 
           {/* Reviews */}
-          {reviews.length > 0 ? (
-            <div className="mb-20">
-              <div className="flex items-center gap-4 mb-6">
-                <h2 className="font-display text-2xl text-white">Отзывы</h2>
-                <span className="px-3 py-1 bg-brand-orange/10 border border-brand-orange/20 rounded-full text-sm text-brand-orange font-semibold">
-                  {reviews.length}
-                </span>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} size={14} className="text-yellow-400" fill="currentColor" />
-                  ))}
-                </div>
-              </div>
+          <div className="mb-20">
+            <div className="flex items-center gap-4 mb-6 flex-wrap">
+              <h2 className="font-display text-2xl text-white">Отзывы</h2>
+              {reviews.length > 0 && (
+                <>
+                  <span className="px-3 py-1 bg-brand-orange/10 border border-brand-orange/20 rounded-full text-sm text-brand-orange font-semibold">
+                    {reviews.length}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-sm text-green-400">
+                    <ThumbsUp size={14} /> {positiveReviews} положительных
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Debug: show raw review data in dev */}
+            <ReviewDebug reviews={reviews} />
+
+            {reviews.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {reviews.map((review) => (
-                  <div key={review.id} className="p-5 bg-brand-dark-2 border border-white/5 rounded-2xl hover:border-white/10 transition-colors">
-                    <div className="flex items-center gap-0.5 mb-3">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star key={i} size={12}
-                          className={i < review.rating ? 'text-yellow-400' : 'text-brand-gray/30'}
-                          fill={i < review.rating ? 'currentColor' : 'none'} />
-                      ))}
+                  <div key={review.id} className="p-5 bg-brand-dark-2 border border-white/5 rounded-2xl hover:border-white/10 transition-colors flex flex-col">
+                    {/* Thumbs rating */}
+                    <div className="flex items-center gap-2 mb-3">
+                      {review.positive ? (
+                        <span className="flex items-center gap-1 text-green-400 text-xs font-semibold">
+                          <ThumbsUp size={13} fill="currentColor" /> Рекомендует
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-red-400 text-xs font-semibold">
+                          <ThumbsDown size={13} fill="currentColor" /> Не рекомендует
+                        </span>
+                      )}
+                      {review.date && (
+                        <span className="ml-auto text-xs text-brand-gray">
+                          {new Date(review.date).toLocaleDateString('ru-RU')}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-brand-gray leading-relaxed mb-4">"{review.text}"</p>
-                    <div className="flex items-center justify-between">
+
+                    <p className="text-sm text-brand-gray leading-relaxed mb-4 flex-1">
+                      {review.text || '—'}
+                    </p>
+
+                    {/* Seller reply */}
+                    {review.seller_reply && (
+                      <div className="mt-2 p-3 bg-brand-dark-3 border border-brand-orange/20 rounded-lg">
+                        <p className="text-xs text-brand-orange font-semibold mb-1">Ответ продавца</p>
+                        <p className="text-xs text-brand-gray">{review.seller_reply}</p>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-white/5">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-brand-orange/20 flex items-center justify-center text-xs font-semibold text-brand-orange">
-                          {review.author.charAt(0)}
+                          {(review.author || 'П').charAt(0).toUpperCase()}
                         </div>
                         <span className="text-xs font-medium text-white">{review.author}</span>
                       </div>
@@ -172,17 +225,13 @@ export default async function ProductPage(
                   </div>
                 ))}
               </div>
-            </div>
-          ) : (
-            // Show placeholder if no reviews yet
-            <div className="mb-20">
-              <h2 className="font-display text-2xl text-white mb-6">Отзывы</h2>
+            ) : (
               <div className="p-8 bg-brand-dark-2 border border-white/5 rounded-2xl text-center text-brand-gray">
                 <Star size={32} className="mx-auto mb-3 opacity-20" />
                 <p className="text-sm">Отзывов пока нет. Будьте первым!</p>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Related products */}
           {relatedProducts.length > 0 && (
