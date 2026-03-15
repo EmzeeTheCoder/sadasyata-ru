@@ -1,36 +1,38 @@
 import { NextResponse } from 'next/server';
-import { getToken, getSellerProducts } from '@/lib/digiseller';
 
-// Visit /api/digiseller/debug to see what's happening
-// REMOVE THIS FILE before going live in production
+// Temporary debug route — delete after confirming products load
+// Visit: https://your-domain/api/digiseller/debug
 export async function GET() {
-  const apiKey = process.env.DIGISELLER_API_KEY;
-  const sellerId = process.env.DIGISELLER_SELLER_ID;
+  const SELLER_ID = process.env.DIGISELLER_SELLER_ID || '1371985';
+  const results: Record<string, any> = {
+    seller_id: SELLER_ID,
+    env_api_key_set: !!process.env.DIGISELLER_API_KEY,
+  };
 
-  if (!apiKey || !sellerId) {
-    return NextResponse.json({
-      error: 'Missing env vars',
-      DIGISELLER_API_KEY: apiKey ? '✅ set' : '❌ MISSING',
-      DIGISELLER_SELLER_ID: sellerId ? '✅ set' : '❌ MISSING',
-    }, { status: 500 });
+  try {
+    const url = `https://api.digiseller.com/api/shop/products?seller_id=${SELLER_ID}&category_id=0&page=1&rows=5&currency=RUR&lang=ru-RU`;
+    results.url_tested = url;
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
+    results.http_status = res.status;
+    const text = await res.text();
+    results.raw_preview = text.slice(0, 600);
+    try {
+      const json = JSON.parse(text);
+      results.retval = json.retval;
+      results.totalItems = json.totalItems;
+      results.product_count = Array.isArray(json.product) ? json.product.length : 0;
+      results.first_product_name = Array.isArray(json.product) ? json.product[0]?.name : null;
+      results.STATUS = (json.retval === '0' || json.retval === 0) ? '✅ API WORKING' : '❌ API ERROR';
+    } catch {
+      results.parse_error = 'Response is not valid JSON';
+    }
+  } catch (e: any) {
+    results.fetch_error = e.message;
+    results.STATUS = '❌ NETWORK ERROR';
   }
 
-  const token = await getToken();
-  if (!token) {
-    return NextResponse.json({
-      error: 'Token failed — check your API key is correct and has permissions',
-      DIGISELLER_API_KEY: '✅ set (but may be wrong)',
-      DIGISELLER_SELLER_ID: sellerId,
-      hint: 'Go to my.digiseller.com/inside/api_keys.asp and create a new key with full permissions',
-    }, { status: 401 });
-  }
-
-  const { products, total } = await getSellerProducts(1, 5);
-  return NextResponse.json({
-    status: '✅ Everything working',
-    token: token.slice(0, 8) + '...',
-    seller_id: sellerId,
-    total_products: total,
-    first_5_products: products.map(p => ({ id: p.id, name: p.name, price: p.price })),
-  });
+  return NextResponse.json(results, { status: 200 });
 }
