@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Russo_One, Inter } from 'next/font/google';
 import './globals.css';
 import { CurrencyProvider } from '@/lib/currency';
+import { LangProvider } from '@/lib/lang';
 import Analytics from '@/components/ui/Analytics';
 
 const russoOne = Russo_One({
@@ -37,9 +38,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru" className={`${russoOne.variable} ${inter.variable}`}>
       <body className="bg-brand-dark text-brand-white font-body antialiased">
         <Analytics />
-        <CurrencyProvider>
-          {children}
-        </CurrencyProvider>
+        <LangProvider>
+          <CurrencyProvider>
+            {children}
+          </CurrencyProvider>
+        </LangProvider>
       </body>
     </html>
   );
